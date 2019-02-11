@@ -1,21 +1,25 @@
-function [pvalue, model] = get_optimal_model(data)
+function [pvalue, model, criterion, Rsq] = get_optimal_model(data)
 %get_optimal_model Obtains optimal model based 
-    mode = "BIC";
+    mode = "AIC";
     distros = ["Normal", "Lognormal", "GeneralizedExtremeValue", "Burr", "Stable"];%, "tLocationScale"];
     distros = ["Normal", "Lognormal", "GeneralizedExtremeValue", "Burr"];%, "Stable"];%, "tLocationScale"];
     n_distros = length(distros);
     pvalues = zeros(1, n_distros);
     models = cell(1, n_distros);
     criteria = zeros(1, n_distros);
-    distro_c = 0;
     % For each distribution...
-    for distro_s = distros
-        distro_c = distro_c + 1;
-        distro = char(distro_s);
+    for distro_c = 1:n_distros
+        distro = char(distros(distro_c));
         % Fit the distribution
-        models{distro_c} = fitdist(data, distro);
+        try
+            models{distro_c} = fitdist(data, distro);
+        catch exception
+           	if exception.identifier == "stats:addburr:WeibullBetter"
+                models{distro_c} = fitdist(data, 'weibull');
+            end
+        end
         % Chi^2 Goodness of Fit test
-        QQ = data;%(randperm(length(data), 500));
+        QQ = data(randperm(length(data), ceil(length(data)*0.1)));
         [h(distro_c), pvalues(distro_c)] = chi2gof(QQ, 'CDF', models{distro_c});
         % Model selection
         if mode == "AIC"
@@ -41,6 +45,8 @@ function [pvalue, model] = get_optimal_model(data)
     [~, i] = max(criteria);
     model = models{i};
     pvalue = pvalues(i);
+    criterion = criteria(distro_c);
+    Rsq = Rsquared(data, model, length(data));
 end
 
 
