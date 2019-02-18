@@ -1,6 +1,6 @@
 function [pvalue, model, criterion, Rsq] = get_optimal_model(data)
 %get_optimal_model Obtains optimal model based 
-    mode = "AIC";
+    mode = "BIC";
     distros = ["Normal", "Lognormal", "GeneralizedExtremeValue", "Burr", "Stable"];%, "tLocationScale"];
     distros = ["Normal", "Lognormal", "GeneralizedExtremeValue", "Burr"];%, "Stable"];%, "tLocationScale"];
     n_distros = length(distros);
@@ -19,7 +19,7 @@ function [pvalue, model, criterion, Rsq] = get_optimal_model(data)
             end
         end
         % Chi^2 Goodness of Fit test
-        QQ = data(randperm(length(data), ceil(length(data)*0.1)));
+        QQ = data;%(randperm(length(data), ceil(length(data)*0.1)));
         [h(distro_c), pvalues(distro_c)] = chi2gof(QQ, 'CDF', models{distro_c});
         % Model selection
         if mode == "AIC"
@@ -33,7 +33,7 @@ function [pvalue, model, criterion, Rsq] = get_optimal_model(data)
             criteria(distro_c) = (log(length(data))*k-2*logL);
             criteria(distro_c) = -criteria(distro_c);
         elseif mode == "Rsq"
-            QQ = data(randperm(length(data), 100));
+            QQ = data;%(randperm(length(data), length(data)));
             qq_x = linspace(0.0001, 0.9999, length(QQ));
             qq_y = icdf(models{distro_c}, qq_x);
             qq_z = sort(QQ);
